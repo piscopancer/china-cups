@@ -7,7 +7,7 @@ import axios from 'axios'
 
 export default async function HomePage({ searchParams }: THomePage) {
 	const text = 'Hello'
-	const translation = await axios.get(`/translate?text=${text}`).then((res) => res.data())
+	const translation = await axios.get(`http://localhost:3000/api/translate?text=${text}`).then((res) => res.data)
 	return (
 		<div className='flex'>
 			<aside className='flex h-screen flex-col items-center border-r-2 border-gray-300'>
