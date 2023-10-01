@@ -1,22 +1,18 @@
-import { GiTeapot } from 'react-icons/gi'
 import { THomePage } from './(private)'
 import TextInput from './(private)/text-input'
 import { projectInfo } from '@/data/project'
 import { BiLogoGithub } from 'react-icons/bi'
 import axios from 'axios'
-import { TTranslationResponse } from '../api/translate/route'
-import { OpenAI } from 'langchain/llms/openai'
+import { model } from '@/utils/langchain'
 
 export default async function HomePage({ searchParams }: THomePage) {
-	const translationResponse: TTranslationResponse = []
-	// searchParams.src_text?.trim() === '' ? null : await axios.get<TTranslationResponse>(`http://localhost:3000/api/translate?text=${searchParams.src_text}`).then((res) => res.data)
+	// const translationResponse = ''
+	const modelResponse = searchParams.src_text ? model.predict(searchParams.src_text) : 'no_text'
 
 	return (
 		<div className='flex'>
 			<aside className='flex h-screen flex-col items-center border-r-2 border-gray-300'>
-				<div className='flex aspect-square w-full items-center justify-center bg-gray-250'>
-					<GiTeapot className='h-8 w-8 fill-gray-500' />
-				</div>
+				<div className='flex aspect-square w-full items-center justify-center bg-gradient-to-t from-gray-250 to-gray-200 text-xl'>☕</div>
 				<div className='mt-auto p-4'>
 					<a
 						className='flex h-12 w-12 items-center justify-center rounded-md duration-200 hover:bg-gray-300'
@@ -31,7 +27,7 @@ export default async function HomePage({ searchParams }: THomePage) {
 				<h1 className='mt-12 text-center text-2xl font-bold '>China Cups</h1>
 				<div className='mx-auto mt-20 max-w-screen-lg'>
 					<TextInput />
-					{!translationResponse ? (
+					{/* {!translationResponse ? (
 						<p>текст оригинала пуст</p>
 					) : (
 						<div>
@@ -43,7 +39,8 @@ export default async function HomePage({ searchParams }: THomePage) {
 								</div>
 							))}
 						</div>
-					)}
+					)} */}
+					{modelResponse}
 				</div>
 			</main>
 		</div>
