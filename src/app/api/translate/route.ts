@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PipelineSingleton } from '@/utils/pipeline'
-import { pipeline } from '@xenova/transformers'
+import { pipeline, QuestionAnsweringPipeline, QuestionAnsweringResult, TranslationPipeline } from '@xenova/transformers'
+
+export type TTranslationResponse = {
+	translation: string
+	explanation: string
+}[]
 
 export async function GET(request: NextRequest) {
-	const text = request.nextUrl.searchParams.get('text')
-	if (!text) {
+	const sourceText = request.nextUrl.searchParams.get('src_text')
+	if (!sourceText) {
 		return NextResponse.json(
 			{
 				error: 'Missing text',
@@ -13,8 +17,29 @@ export async function GET(request: NextRequest) {
 		)
 	}
 	// const translator = await PipelineSingleton.getInstance()
-	const translator = await pipeline('question-answering')
-	const translation = await translator('Can I use your phone to call my mum?')
-	console.log(translation) // undefined, IDK why
-	return NextResponse.json('if you put any text here, it is working fine. The problem is the response being undefined 😟.')
+	const translator = await pipeline('translation', 'Xenova/nllb-200-distilled-600M')
+	const translations = (await translator(sourceText, {
+		src_lang: 'rus_Cyrl',
+		tgt_lang: 'zho_Hans',
+		num_beams: 5,
+		num_return_sequences: 5,
+	})) as { translation_text: string }[]
+	// console.log(translations)
+
+	const explanator = await pipeline('question-answering', 'Xenova/distilbert-base-cased-distilled-squad')
+	const translationWithExplanation: TTranslationResponse = await Promise.all(
+		translations.map(async ({ translation_text }) => {
+			const explanation = (await explanator(
+				`Пожалуйста, объясни следующий перевод: ${translation_text}`,
+				`Текст оригинала на русском языке: ${sourceText}. Текст перевода на китайском языке: ${translation_text}`,
+			)) as QuestionAnsweringResult
+			return {
+				translation: translation_text,
+				explanation: explanation.answer,
+			}
+		}),
+	)
+	console.log(translationWithExplanation)
+
+	return NextResponse.json(translationWithExplanation)
 }
